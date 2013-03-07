@@ -614,9 +614,12 @@ class EasyEC2(EasyAWS):
         imgs_i386.sort(key=sort_key, reverse=reverse)
         imgs_x86_64 = [img for img in images if img.architecture == "x86_64"]
         imgs_x86_64.sort(key=sort_key, reverse=reverse)
+        imgs_unknown_arch = [img for img in images if not img.architecture]
+        imgs_unknown_arch.sort(key=sort_key, reverse=reverse)
         print
         self.__list_images("32bit Images:", imgs_i386)
         self.__list_images("\n64bit Images:", imgs_x86_64)
+        self.__list_images("\nImages with unknown architecture:", imgs_unknown_arch)
         print "\ntotal images: %d" % len(images)
         print
 
