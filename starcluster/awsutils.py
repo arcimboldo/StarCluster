@@ -185,7 +185,12 @@ class EasyEC2(EasyAWS):
         filters = {}
         if groupnames:
             filters = {'group-name': groupnames}
-        return self.get_security_groups(filters=filters)
+        groups = self.get_security_groups(filters=filters)
+        # Fix for OpenStack
+        if 'group-name' in filters:
+            groups = [g for g in groups if g.name in filters['group-name']]
+        return groups
+            
 
     def get_group_or_none(self, name):
         """
@@ -227,7 +232,12 @@ class EasyEC2(EasyAWS):
         """
         Returns all security groups on this EC2 account
         """
-        return self.conn.get_all_security_groups(filters=filters)
+        groups = self.conn.get_all_security_groups(filters=filters)
+        # Fix for OpenStack
+        if filters and 'group-name' in filters:
+            groups = filter(lambda g: g.name == filters['group-name'], groups)
+        return groups
+
 
     def get_permission_or_none(self, group, ip_protocol, from_port, to_port,
                                cidr_ip=None):
@@ -478,6 +488,8 @@ class EasyEC2(EasyAWS):
         except boto.exception.EC2ResponseError, e:
             if e.error_code == "InvalidInstanceID.NotFound":
                 raise exception.InstanceDoesNotExist(instance_id)
+            elif e.error_code == "UnknownError":
+                return ''
             raise e
 
     def get_all_instances(self, instance_ids=[], filters=None):

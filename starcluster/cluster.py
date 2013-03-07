@@ -682,6 +682,8 @@ class Cluster(object):
         filters = {'group-name': self._security_group,
                    'instance-state-name': states}
         nodes = self.ec2.get_all_instances(filters=filters)
+        # Fix for OpenStack 
+        nodes = [node for node in nodes if self._security_group in [g.id for g in node.groups] and node.state in states]
         # remove any cached nodes not in the current node list from EC2
         current_ids = [n.id for n in nodes]
         remove_nodes = [n for n in self._nodes if n.id not in current_ids]
@@ -713,6 +715,8 @@ class Cluster(object):
         if not nodes:
             filters = {'group-name': self._security_group}
             terminated_nodes = self.ec2.get_all_instances(filters=filters)
+            # Fix for OpenStack
+            terminated_nodes = [node for node in terminated_nodes if self._security_group in [g.id for g in node.groups]]
             raise exception.NoClusterNodesFound(terminated_nodes)
         return nodes
 
@@ -1308,6 +1312,7 @@ class Cluster(object):
         filters = {'group-name': self._security_group,
                    'instance-state-name': states}
         insts = self.ec2.get_all_instances(filters=filters)
+        insts = [i for i in insts if self._security_group in [g.id for g in i.groups] and i.state in states]
         return len(insts) == 0
 
     def attach_volumes_to_master(self):
@@ -1773,7 +1778,7 @@ class ClusterValidator(validators.Validator):
                 "virtual machine (HVM) images. Image '%s' is not an HVM "
                 "image." % (instance_type, image_id))
         instance_platforms = static.INSTANCE_TYPES[instance_type]
-        if image_platform not in instance_platforms:
+        if image_platform and image_platform not in instance_platforms:
             error_msg = "Instance type %(instance_type)s is for an " \
                         "%(instance_platform)s platform while " \
                         "%(image_id)s is an %(image_platform)s platform"
