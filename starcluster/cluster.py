@@ -220,6 +220,9 @@ class ClusterManager(managers.Manager):
         """
         glob = static.SECURITY_GROUP_TEMPLATE % '*'
         sgs = self.ec2.get_security_groups(filters={'group-name': glob})
+        # Fix for OpenStack which does not support `filters` optional
+        # argument.
+        sgs = [sg for sg in sgs if re.match('^%s-.*' % static.SECURITY_GROUP_PREFIX, sg.name)]
         return sgs
 
     def get_tag_from_sg(self, sg):
