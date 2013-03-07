@@ -561,7 +561,7 @@ class EasyEC2(EasyAWS):
 
     def show_instance(self, instance):
         instance_id = instance.id or 'N/A'
-        groups = ', '.join([g.name for g in instance.groups])
+        groups = ', '.join([str(g.name) for g in instance.groups])
         dns_name = instance.dns_name or 'N/A'
         private_dns_name = instance.private_dns_name or 'N/A'
         state = instance.state or 'N/A'
@@ -578,7 +578,7 @@ class EasyEC2(EasyAWS):
         print "id: %s" % instance_id
         print "dns_name: %s" % dns_name
         print "private_dns_name: %s" % private_dns_name
-        if instance.reason:
+        if hasattr(instance, 'reason') and instance.reason:
             print "state: %s (%s)" % (state, instance.reason)
         else:
             print "state: %s" % state
